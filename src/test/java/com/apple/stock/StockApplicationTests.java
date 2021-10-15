@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import protostream.com.google.gson.Gson;
 import watch.TelegramMessage;
@@ -35,7 +36,10 @@ class StockApplicationTests {
     //Test
     //private static final String HOST_URL = "https://www.apple.com/kr/shop/retail/pickup-message?pl=true&searchNearby=true&store=R692&parts.0=MKQA3KH/A&option.0=ML2P3FE%2FA&mt=regular&parts.1=MKTG3KH/A&option.1=ML303FE%2FA&mt=regular&_=1633740088271";
     //Origin
-    private static final String HOST_URL = "https://www.apple.com/kr/shop/retail/pickup-message?pl=true&searchNearby=true&store=R692&parts.0=MKLW3KH/A&option.0=ML873FE%2FA&mt=regular&parts.1=MKMT3KH/A&option.1=ML8D3FE%2FA&mt=regular&parts.2=MKNA3KH/A&mt=regular&_=1633708471832";
+    //private static final String HOST_URL = "https://www.apple.com/kr/shop/retail/pickup-message?pl=true&searchNearby=true&store=R692&parts.0=MKLW3KH/A&option.0=ML873FE%2FA&mt=regular&parts.1=MKMT3KH/A&option.1=ML8D3FE%2FA&mt=regular&parts.2=MKNA3KH/A&mt=regular&_=1633708471832";
+    //private static final String HOST_URL = "https://www.apple.com/kr/shop/retail/pickup-message?pl=true&searchNearby=true&store=R692&parts.0=MKLW3KH/A&option.0=ML873FE%2FA&mt=regular&parts.1=MKMT3KH/A&option.1=ML8D3FE%2FA&mt=regular&parts.2=MKNA3KH/A&mt=regular&parts.3=MKJ33KH/A&mt=regular&parts.4=MKL43KH/A&mt=regular&_=1633708471832";
+    private static final String HOST_URL = "https://www.apple.com/kr/shop/retail/pickup-message?pl=true&searchNearby=true&store=R692&parts.0=MKLW3KH/A&option.0=ML2W3FE%2FA&mt=regular&parts.1=MKMT3KH/A&option.1=ML373FE%2FA&mt=regular&parts.2=MKNA3KH/A&mt=regular&parts.3=MKJ33KH/A&mt=regular&parts.4=MKL43KH/A&mt=regular&_=1633708471832";
+
 
     @Test
     void contextLoads() {
@@ -43,7 +47,7 @@ class StockApplicationTests {
     while(true){
         try {
             run();
-            Thread.sleep(300000); //1초 대기 300 * 1000(1초) = 300000 (5분)
+            Thread.sleep(10000); //1초 대기 300 * 1000(1초) = 300000 (5분)
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -59,6 +63,7 @@ class StockApplicationTests {
         String fromEmail = "taylorror@gmail.com";
         String fromUsername = "박재현";
         String toEmail = "kokikiko@knou.ac.kr,ssamta@icloud.com,liz_y115@naver.com"; // 콤마(,)로 여러개 나열
+        //String toEmail = "kokikiko@knou.ac.kr"; // 콤마(,)로 여러개 나열
 
 
         // 메일에 출력할 텍스트
@@ -142,6 +147,7 @@ class StockApplicationTests {
         JSONObject responseJson = null;
         StringBuilder sb = new StringBuilder();
         StringBuilder noticeSB = new StringBuilder();
+        StringBuilder noticeTelegram = new StringBuilder();
         Boolean isSend = false;
 
         try {
@@ -190,18 +196,30 @@ class StockApplicationTests {
                         //상품명
                         String product1_storePickupProductTitle = (String) product1.get("storePickupProductTitle");
                         //상품 옵션 :  ML873FE/A =  올리브 그레이/카고 카키
+                        //          ML2W3FE/A = 서밋 화이트
                         String product1_ctoOptions = (String) product1.get("ctoOptions");
+                        if(product1_ctoOptions.equals("ML873FE/A")){
+                            product1_ctoOptions = "올리브 그레이/카고 카키";
+                        }else if(product1_ctoOptions.equals("ML2W3FE/A")){
+                            product1_ctoOptions = "서밋 화이트";
+                        }
                         //상품 재고
                         Boolean product1_storeSelectionEnabled = (Boolean) product1.get("storeSelectionEnabled");
                         /**
                          * 재현 상품
                          */
-                        //상품 : MKMT3KH/A 45mm  // Test -> MKTG3KH/A
+                        //상품 : MKMT3KH/A 45mm  // Test -> MKTG3KH/A MKMT3KH
                         JSONObject product2 = (JSONObject) partsAvailability.get("MKMT3KH/A");
                         //상품명
                         String product2_storePickupProductTitle = (String) product2.get("storePickupProductTitle");
                         //상품 옵션 : ML8D3FE/A =  올리브 그레이/카고 카키
+                        //         ML373FE/A = 서밋 화이트
                         String product2_ctoOptions = (String) product2.get("ctoOptions");
+                        if(product2_ctoOptions.equals("ML8D3FE/A")){
+                            product2_ctoOptions = "올리브 그레이/카고 카키";
+                        }else if(product2_ctoOptions.equals("ML373FE/A")){
+                            product2_ctoOptions = "서밋 화이트";
+                        }
                         //상품 재고
                         Boolean product2_storeSelectionEnabled = (Boolean) product2.get("storeSelectionEnabled");
                         /**
@@ -214,29 +232,55 @@ class StockApplicationTests {
                         //상품 재고
                         Boolean product3_storeSelectionEnabled = (Boolean) product3.get("storeSelectionEnabled");
 
+                        /**
+                         *  스타라이트 알루미늄 케이스 41 + 셀룰러, 그리고 Nike 스포츠 밴드
+                         */
+                        //상품 : MKJ33KH/A 45mm
+                        JSONObject product4 = (JSONObject) partsAvailability.get("MKJ33KH/A");
+                        //상품명
+                        String product4_storePickupProductTitle = (String) product4.get("storePickupProductTitle");
+                        //상품 재고
+                        Boolean product4_storeSelectionEnabled = (Boolean) product4.get("storeSelectionEnabled");
+                        /**
+                         *  스타라이트 알루미늄 케이스 45 + 셀룰러, 그리고 Nike 스포츠 밴드
+                         */
+                        //상품 : MKL43KH/A 45mm
+                        JSONObject product5 = (JSONObject) partsAvailability.get("MKL43KH/A");
+                        //상품명
+                        String product5_storePickupProductTitle = (String) product5.get("storePickupProductTitle");
+                        //상품 재고
+                        Boolean product5_storeSelectionEnabled = (Boolean) product5.get("storeSelectionEnabled");
 
                         //픽업 재고가 있는 경우에만 셋팅
-                        if(product1_storeSelectionEnabled || product2_storeSelectionEnabled || product3_storeSelectionEnabled) {
-/*
+                        if(
+                                   product1_storeSelectionEnabled
+                                || product2_storeSelectionEnabled
+                                || product3_storeSelectionEnabled
+                                || product4_storeSelectionEnabled
+                                || product5_storeSelectionEnabled
+                        ) {
 
-                            noticeSB.append("[매장]  " +  storeName +System.lineSeparator());
-                            noticeSB.append("[상품명]  " + product1_storePickupProductTitle + " " +  (product1_ctoOptions.equals("ML873FE/A") ? "올리브 그레이/카고 카키": product1_ctoOptions) +System.lineSeparator());
-                            noticeSB.append("[픽업 재고] "+ (product1_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator());
-                            noticeSB.append("[상품명] " + product2_storePickupProductTitle + " " + (product2_ctoOptions.equals("ML8D3FE/A") ? "올리브 그레이/카고 카키" : product2_ctoOptions) +System.lineSeparator());
-                            noticeSB.append("[픽업 재고] " + (product2_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
-                            noticeSB.append(System.lineSeparator());
-*/
-/*
-                            noticeSB.append("<h1> 매장  " +  storeName +"</h1>");
-                            noticeSB.append("<h3>[예진]  " + product1_storePickupProductTitle + " " +  (product1_ctoOptions.equals("ML873FE/A") ? "올리브 그레이/카고 카키": product1_ctoOptions) +"<br>");
-                            noticeSB.append("[픽업 가능 여부]  "+ (product1_storeSelectionEnabled == true ? "O":"X") +"</<h3>");
-                            noticeSB.append("<h3>[재현] " + product2_storePickupProductTitle + " " + (product2_ctoOptions.equals("ML8D3FE/A") ? "올리브 그레이/카고 카키" : product2_ctoOptions) +"<br>");
-                            noticeSB.append("[픽업 가능 여부]  " + (product2_storeSelectionEnabled == true ? "O":"X") +"</h3>");
-                            noticeSB.append("<h3>[현수] " + product3_storePickupProductTitle + "<br>");
-                            noticeSB.append("[픽업 가능 여부]  " + (product3_storeSelectionEnabled == true ? "O":"X") +"</h3>");
-                            noticeSB.append("<br><br>");
+                            /**
+                             * 텔레그램
+                             */
+                            noticeTelegram.append("[매장]  " +  storeName +System.lineSeparator());
 
- */
+                            noticeTelegram.append("[상품명]  " + product1_storePickupProductTitle + " " +  product1_ctoOptions +System.lineSeparator());
+                            noticeTelegram.append("[픽업 재고] "+ (product1_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
+
+                            noticeTelegram.append("[상품명] " + product2_storePickupProductTitle + " " +  product2_ctoOptions +System.lineSeparator());
+                            noticeTelegram.append("[픽업 재고] " + (product2_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
+
+                            noticeTelegram.append("[상품명] " + product3_storePickupProductTitle+System.lineSeparator());
+                            noticeTelegram.append("[픽업 재고] " + (product3_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
+
+                            noticeTelegram.append("[상품명] " + product4_storePickupProductTitle+System.lineSeparator());
+                            noticeTelegram.append("[픽업 재고] " + (product4_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
+
+                            noticeTelegram.append("[상품명] " + product5_storePickupProductTitle+System.lineSeparator());
+                            noticeTelegram.append("[픽업 재고] " + (product5_storeSelectionEnabled == true ? "O":"X") +System.lineSeparator() +System.lineSeparator());
+                            noticeTelegram.append(System.lineSeparator());
+
                             /**
                              * 예진 - product1
                              * 재현 - product2
@@ -253,13 +297,13 @@ class StockApplicationTests {
                             noticeSB.append("<tr>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">예진</td>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">" +
-                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/41mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%EC%98%AC%EB%A6%AC%EB%B8%8C-%EA%B7%B8%EB%A0%88%EC%9D%B4-%EC%B9%B4%EA%B3%A0-%EC%B9%B4%ED%82%A4-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%B0%B4%EB%93%9C-onesize\" target='_blank'>" + product1_storePickupProductTitle + " " +  (product1_ctoOptions.equals("ML873FE/A") ? "올리브 그레이/카고 카키": product1_ctoOptions) +"</a></td>");
+                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/41mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%EC%84%9C%EB%B0%8B-%ED%99%94%EC%9D%B4%ED%8A%B8-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%A3%A8%ED%94%84-onesize\" target='_blank'>" + product1_storePickupProductTitle + " " + product1_ctoOptions +"</a></td>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:center;vertical-align:top;word-break:normal\">"+ (product1_storeSelectionEnabled == true ? "O":"X") +"</td>");
                             noticeSB.append("</tr>");
                             noticeSB.append("<tr>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">재현</td>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">"+
-                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/45mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%EC%98%AC%EB%A6%AC%EB%B8%8C-%EA%B7%B8%EB%A0%88%EC%9D%B4-%EC%B9%B4%EA%B3%A0-%EC%B9%B4%ED%82%A4-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%B0%B4%EB%93%9C-onesize\" target='_blank'>"+ product2_storePickupProductTitle + " " + (product2_ctoOptions.equals("ML8D3FE/A") ? "올리브 그레이/카고 카키" : product2_ctoOptions) +"</a></td>");
+                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/45mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%EC%84%9C%EB%B0%8B-%ED%99%94%EC%9D%B4%ED%8A%B8-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%A3%A8%ED%94%84-onesize\" target='_blank'>"+ product2_storePickupProductTitle + " " + product2_ctoOptions +"</a></td>");
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:center;vertical-align:top;word-break:normal\">"+ (product2_storeSelectionEnabled == true ? "O":"X") +"</td>");
                             noticeSB.append("</tr>");
                             noticeSB.append("<tr>");
@@ -269,6 +313,19 @@ class StockApplicationTests {
                             noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:center;vertical-align:top;word-break:normal\">"+ (product3_storeSelectionEnabled == true ? "O":"X") +"</td>");
                             noticeSB.append("</tr>");
 
+                            noticeSB.append("<tr>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\"></td>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">" +
+                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/41mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%ED%93%A8%EC%96%B4-%ED%94%8C%EB%9E%98%ED%8B%B0%EB%84%98-%EB%B8%94%EB%9E%99-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%B0%B4%EB%93%9C-onesize\" target='_blank'>"+ product4_storePickupProductTitle +"</a></td>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:center;vertical-align:top;word-break:normal\">"+ (product4_storeSelectionEnabled == true ? "O":"X") +"</td>");
+                            noticeSB.append("</tr>");
+
+                            noticeSB.append("<tr>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\"></td>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:left;vertical-align:top;word-break:normal\">" +
+                                    "<a href=\"https://www.apple.com/kr/shop/buy-watch/apple-watch-nike/45mm-cellular-%EC%8A%A4%ED%83%80%EB%9D%BC%EC%9D%B4%ED%8A%B8-%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84-%ED%93%A8%EC%96%B4-%ED%94%8C%EB%9E%98%ED%8B%B0%EB%84%98-%EB%B8%94%EB%9E%99-%EC%8A%A4%ED%8F%AC%EC%B8%A0-%EB%B0%B4%EB%93%9C-onesize\" target='_blank'>"+ product5_storePickupProductTitle +"</a></td>");
+                            noticeSB.append("<td style=\"border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:100%;font-weight:bold;overflow:hidden;padding:10px 20px;text-align:center;vertical-align:top;word-break:normal\">"+ (product5_storeSelectionEnabled == true ? "O":"X") +"</td>");
+                            noticeSB.append("</tr>");
                             isSend = true;
                         }
 
@@ -282,12 +339,18 @@ class StockApplicationTests {
                      *텔레그램 
                      */
                     //funcTelegram(noticeSB.toString());
+                    //noticeTelegram.setLength(0);
                     /**
                      *메일
                      */
                     mailSend(noticeSB.toString());
                     noticeSB.setLength(0);
                     isSend = false;
+
+                    SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일 HH시mm분ss초");
+                    Date time = new Date();
+                    String nowTime = format2.format(time);
+                    System.out.println(nowTime+" => [전송 완료]");
                 }else {
                     SimpleDateFormat format2 = new SimpleDateFormat ( "yyyy년 MM월dd일 HH시mm분ss초");
                     Date time = new Date();
@@ -295,6 +358,8 @@ class StockApplicationTests {
                     System.out.println(nowTime+" => [재고 없음]");
                 }
 
+                funcTelegram(noticeTelegram.toString());
+                noticeTelegram.setLength(0);
 
             }
         } catch (MalformedURLException e) {
@@ -312,22 +377,24 @@ class StockApplicationTests {
     public static void funcTelegram(String message){
         String token = "2002093648:AAHbzGDAOULge7CeS7Ostl6r6f3E2PCItpE";
         String chat_id = "1766085447";
-        String text = message ;
+        String text =  message;
         String url = "https://api.telegram.org/bot" + token + "/sendMessage";
+
+        //https://api.telegram.org/bot2002093648:AAHbzGDAOULge7CeS7Ostl6r6f3E2PCItpE/getUpdates
 
 
         BufferedReader in = null;
-
         try {
+            if(!StringUtils.isEmpty(message)){
+                TelegramMessage telegramMessage = new TelegramMessage(chat_id,text);
+                String param = new Gson().toJson(telegramMessage);
 
-            TelegramMessage telegramMessage = new TelegramMessage(chat_id,text);
-            String param = new Gson().toJson(telegramMessage);
-
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-            HttpEntity<String> entity = new HttpEntity<>(param, headers);
-            restTemplate.postForEntity(url, entity, String.class);
+                RestTemplate restTemplate = new RestTemplate();
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+                HttpEntity<String> entity = new HttpEntity<>(param, headers);
+                restTemplate.postForEntity(url, entity, String.class);
+            }
 
         } catch(Exception e) {
             e.printStackTrace();
